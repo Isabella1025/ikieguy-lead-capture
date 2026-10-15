@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Ikieguy Lead Capture</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <style>
+    :root {
+      --bg: #0e131e;
+      --bg-surface: #161c2a;
+      --bg-card: #1c2436;
+      --bg-card-hover: #242e44;
+      --bg-card-selected: #1a2a4a;
+      --fg: #e8eaf0;
+      --fg-dim: #8b92a5;
+      --fg-muted: #5a6178;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.15);
+      --accent-strong: #60a5fa;
+      --success: #22c55e;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --border: #2a3348;
+      --border-focus: #3b82f6;
+      --radius: 12px;
+      --radius-sm: 8px;
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; margin: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      padding: 0 max(16px, env(safe-area-inset-left, 16px));
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 0 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    /* ── Setup Banner ── */
+    .setup-banner {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .setup-banner.show { display: flex; }
+    .setup-banner h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--warn);
+    }
+    .setup-banner p {
+      font-size: 13px;
+      color: var(--fg-dim);
+      line-height: 1.5;
+    }
+    .setup-banner code {
+      background: var(--bg-surface);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .setup-input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .setup-input-row input {
+      flex: 1;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      color: var(--fg);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+    .setup-input-row input:focus { border-color: var(--border-focus); }
+    .setup-input-row button {
+      background: var(--warn);
+      color: #000;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 10px 20px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .logo-area { display: flex; align-items: center; gap: 14px; }
+    .logo-mark {
+      width: 40px; height: 40px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: grid; place-items: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700; font-size: 18px; color: #fff;
+      flex-shrink: 0;
+    }
+    .logo-text h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 22px; font-weight: 700;
+      letter-spacing: -0.02em; line-height: 1.1;
+    }
+    .logo-text p { font-size: 13px; color: var(--fg-dim); margin-top: 2px; }
+
+    .lead-counter { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .counter-badge {
+      background: var(--accent-glow);
+      border: 1px solid rgba(59,130,246,0.25);
+      color: var(--accent-strong);
+      padding: 6px 14px; border-radius: 20px;
+      font-size: 13px; font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .sync-badge {
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .sync-badge.online {
+      background: rgba(34,197,94,0.12);
+      border: 1px solid rgba(34,197,94,0.25);
+      color: #4ade80;
+    }
+    .sync-badge.offline {
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.25);
+      color: var(--warn);
+    }
+    .sync-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%; display: inline-block;
+    }
+    .sync-badge.online .sync-dot { background: #4ade80; }
+    .sync-badge.offline .sync-dot { background: var(--warn); }
+
+    .btn-export {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-dim);
+      padding: 7px 14px; border-radius: 20px;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s;
+      font-family: inherit;
+    }
+    .btn-export:hover { border-color: var(--fg-dim); color: var(--fg); }
+    .btn-export:disabled { opacity: 0.4; cursor: default; }
+
+    /* ── View Toggle ── */
+    .views { display: flex; }
+    .view-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-dim);
+      padding: 7px 18px; font-size: 13px; font-weight: 500;
+      cursor: pointer; font-family: inherit; transition: all 0.15s;
+    }
+    .view-btn:first-child { border-radius: 20px 0 0 20px; }
+    .view-btn:last-child { border-radius: 0 20px 20px 0; border-left: 0; }
+    .view-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ── Product Grid ── */
+    .section-label {
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--fg-muted); margin-bottom: -16px;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+
+    .product-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px; cursor: pointer;
+      transition: all 0.2s;
+      display: flex; flex-direction: column; gap: 8px;
+      position: relative;
+      user-select: none; -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .product-card:hover { background: var(--bg-card-hover); }
+    .product-card.selected {
+      background: var(--bg-card-selected);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent), 0 0 20px var(--accent-glow);
+    }
+    .product-card .check {
+      position: absolute; top: 10px; right: 10px;
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 1.5px solid var(--border);
+      display: grid; place-items: center; transition: all 0.2s;
+    }
+    .product-card.selected .check { background: var(--accent); border-color: var(--accent); }
+    .check svg { opacity: 0; transition: opacity 0.15s; }
+    .product-card.selected .check svg { opacity: 1; }
+    .product-icon { font-size: 24px; line-height: 1; }
+    .product-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600; font-size: 15px;
+      line-height: 1.2; padding-right: 28px;
+    }
+    .product-tag { font-size: 11px; color: var(--fg-dim); line-height: 1.3; }
+
+    /* ── Form ── */
+    .form-section { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-section .full { grid-column: 1 / -1; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 12px; font-weight: 500; color: var(--fg-dim); }
+    .field input, .field textarea {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px; color: var(--fg);
+      font-size: 15px; font-family: inherit;
+      transition: border-color 0.2s; outline: none; width: 100%;
+    }
+    .field input::placeholder, .field textarea::placeholder { color: var(--fg-muted); }
+    .field input:focus, .field textarea:focus { border-color: var(--border-focus); }
+    .field textarea { resize: vertical; min-height: 60px; }
+
+    .btn-submit {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: var(--radius-sm);
+      padding: 14px 28px; font-size: 16px; font-weight: 600;
+      font-family: 'Space Grotesk', sans-serif;
+      cursor: pointer; transition: all 0.2s;
+      letter-spacing: -0.01em; width: 100%;
+    }
+    .btn-submit:hover { background: #2563eb; }
+    .btn-submit:disabled { opacity: 0.5; cursor: default; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: max(24px, env(safe-area-inset-bottom, 24px));
+      left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--success); color: #fff;
+      padding: 12px 24px; border-radius: 28px;
+      font-size: 14px; font-weight: 600;
+      opacity: 0; transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: none; z-index: 100; white-space: nowrap;
+    }
+    .toast.error { background: var(--danger); }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Leads Table ── */
+    .leads-view { display: none; }
+    .leads-view.active { display: block; }
+    .capture-view.active { display: flex; flex-direction: column; gap: 28px; }
+    .capture-view { display: none; }
+
+    .leads-toolbar {
+      display: flex; justify-content: flex-end; margin-bottom: 8px;
+    }
+    .btn-refresh {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--fg-dim); padding: 6px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      font-family: inherit; transition: all 0.2s;
+    }
+    .btn-refresh:hover { border-color: var(--fg-dim); color: var(--fg); }
+
+    .leads-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .leads-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 13px; font-variant-numeric: tabular-nums;
+    }
+    .leads-table th {
+      text-align: left; padding: 10px 14px;
+      font-weight: 600; font-size: 11px;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--fg-muted); background: var(--bg-surface);
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    .leads-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--fg-dim);
+      max-width: 200px; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+    }
+    .leads-table tr:last-child td { border-bottom: 0; }
+    .leads-table td:first-child { color: var(--fg); font-weight: 500; }
+    .lead-products-cell { display: flex; gap: 4px; flex-wrap: wrap; }
+    .lead-chip {
+      background: var(--accent-glow); color: var(--accent-strong);
+      padding: 2px 8px; border-radius: 10px;
+      font-size: 11px; font-weight: 500; white-space: nowrap;
+    }
+    .empty-leads {
+      text-align: center; padding: 48px 16px;
+      color: var(--fg-muted); font-size: 14px;
+    }
+    .btn-delete {
+      background: transparent; border: none;
+      color: var(--fg-muted); cursor: pointer;
+      padding: 4px; border-radius: 4px;
+      transition: color 0.15s; font-size: 16px; line-height: 1;
+    }
+    .btn-delete:hover { color: var(--danger); }
+
+    .loading-spinner {
+      text-align: center; padding: 32px;
+      color: var(--fg-muted); font-size: 13px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .form-section { grid-template-columns: 1fr; }
+      .form-section .full { grid-column: 1; }
+      .product-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+      .header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Setup banner — shows until API URL is configured -->
+    <div class="setup-banner show" id="setupBanner">
+      <h3>Connect to your Google Sheet</h3>
+      <p>Paste your Google Apps Script deployment URL below. See <code>README.md</code> for setup steps.</p>
+      <div class="setup-input-row">
+        <input type="url" id="apiInput" placeholder="https://script.google.com/macros/s/xxxxx/exec">
+        <button onclick="saveApiUrl()">Connect</button>
+      </div>
+    </div>
+
+    <div class="header">
+      <div class="logo-area">
+        <div class="logo-mark">IK</div>
+        <div class="logo-text">
+          <h1>IKIEGUY</h1>
+          <p>Expo Lead Capture</p>
+        </div>
+      </div>
+      <div class="lead-counter">
+        <div class="views">
+          <button class="view-btn active" onclick="showView('capture')">Capture</button>
+          <button class="view-btn" onclick="showView('leads')">Leads</button>
+        </div>
+        <span class="sync-badge offline" id="syncBadge"><span class="sync-dot"></span>Not connected</span>
+        <span class="counter-badge" id="counter">0 leads</span>
+        <button class="btn-export" id="exportBtn" disabled onclick="exportCSV()">Export CSV</button>
+      </div>
+    </div>
+
+    <!-- CAPTURE VIEW -->
+    <div class="capture-view active" id="captureView">
+      <span class="section-label">Which products interest you?</span>
+      <div class="product-grid" id="productGrid"></div>
+
+      <span class="section-label">Your details</span>
+      <form id="leadForm" onsubmit="return handleSubmit(event)">
+        <div class="form-section">
+          <div class="field">
+            <label for="fname">Full name *</label>
+            <input type="text" id="fname" name="name" placeholder="Kofi Mensah" required autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="fcompany">Company / Organisation</label>
+            <input type="text" id="fcompany" name="company" placeholder="Acme Ltd" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="fphone">Phone *</label>
+            <input type="tel" id="fphone" name="phone" placeholder="020 000 0000" required autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="femail">Email</label>
+            <input type="email" id="femail" name="email" placeholder="kofi@example.com" autocomplete="off">
+          </div>
+          <div class="field full">
+            <label for="fnotes">Notes</label>
+            <textarea id="fnotes" name="notes" placeholder="Anything specific they mentioned…" rows="2"></textarea>
+          </div>
+          <div class="full">
+            <button type="submit" class="btn-submit" id="submitBtn">Save Lead</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- LEADS VIEW -->
+    <div class="leads-view" id="leadsView">
+      <div class="leads-toolbar">
+        <button class="btn-refresh" onclick="fetchLeads()">↻ Refresh</button>
+      </div>
+      <div class="leads-table-wrap">
+        <table class="leads-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Company</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Products</th>
+              <th>Notes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="leadsBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-leads" id="emptyMsg">No leads captured yet. Switch to Capture to start.</div>
+      <div class="loading-spinner" id="loadingMsg" style="display:none;">Loading leads from Google Sheet…</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ══════════════════════════════════════════════════════════
+    //  CONFIG — your Google Apps Script web app URL
+    // ══════════════════════════════════════════════════════════
+    let API_URL = '';
+
+    const PRODUCTS = [
+      { id: 'helpdesk',    icon: '📞', name: 'HelpDesk',                tag: 'AI voice campaigns & inbound agents' },
+      { id: 'telematics',  icon: '🚗', name: 'Complete Car Telematics', tag: 'Fleet tracking & AI dash cams' },
+      { id: 'churchsync',  icon: '⛪', name: 'ChurchSync',             tag: 'Church management & AI outreach' },
+      { id: 'estatesync',  icon: '🏠', name: 'EstateSync',             tag: 'Property & estate management' },
+      { id: 'eventsync',   icon: '🎫', name: 'EventSync',              tag: 'Intelligent event management' },
+      { id: 'studymate',   icon: '📚', name: 'StudyMate',              tag: 'AI e-learning & voice tutor' },
+      { id: 'bookwave',    icon: '🎧', name: 'Bookwave',               tag: 'Interactive AI audiobooks' },
+    ];
+
+    let selected = new Set();
+    let leads = [];
+    let currentView = 'capture';
+
+    // ── Init ──
+    function init() {
+      // Check for saved API URL
+      try {
+        API_URL = localStorage.getItem('ikieguy_api_url') || '';
+      } catch (e) {}
+
+      renderProducts();
+
+      if (API_URL) {
+        document.getElementById('setupBanner').classList.remove('show');
+        setSyncStatus(true);
+        fetchLeads();
+      } else {
+        setSyncStatus(false);
+      }
+
+      updateCounter();
+    }
+
+    function saveApiUrl() {
+      var url = document.getElementById('apiInput').value.trim();
+      if (!url || !url.startsWith('https://script.google.com/')) {
+        showToast('Paste a valid Apps Script URL', true);
+        return;
+      }
+      API_URL = url;
+      try { localStorage.setItem('ikieguy_api_url', url); } catch (e) {}
+      document.getElementById('setupBanner').classList.remove('show');
+      setSyncStatus(true);
+      showToast('Connected to Google Sheet');
+      fetchLeads();
+    }
+
+    function setSyncStatus(online) {
+      var badge = document.getElementById('syncBadge');
+      if (online) {
+        badge.className = 'sync-badge online';
+        badge.innerHTML = '<span class="sync-dot"></span>Connected';
+      } else {
+        badge.className = 'sync-badge offline';
+        badge.innerHTML = '<span class="sync-dot"></span>Not connected';
+      }
+    }
+
+    // ── Products ──
+    function renderProducts() {
+      var grid = document.getElementById('productGrid');
+      grid.innerHTML = PRODUCTS.map(function(p) {
+        return '<div class="product-card" data-id="' + p.id + '" onclick="toggleProduct(\'' + p.id + '\', this)">' +
+          '<div class="check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none">' +
+          '<path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '</svg></div>' +
+          '<span class="product-icon">' + p.icon + '</span>' +
+          '<span class="product-name">' + p.name + '</span>' +
+          '<span class="product-tag">' + p.tag + '</span>' +
+        '</div>';
+      }).join('');
+    }
+
+    function toggleProduct(id, el) {
+      if (selected.has(id)) {
+        selected.delete(id);
+        el.classList.remove('selected');
+      } else {
+        selected.add(id);
+        el.classList.add('selected');
+      }
+    }
+
+    // ── Submit Lead ──
+    async function handleSubmit(e) {
+      e.preventDefault();
+      if (!API_URL) {
+        showToast('Connect to Google Sheet first', true);
+        return false;
+      }
+
+      var form = document.getElementById('leadForm');
+      var productNames = Array.from(selected).map(function(pid) {
+        var p = PRODUCTS.find(function(x) { return x.id === pid; });
+        return p ? p.name : pid;
+      });
+
+      var lead = {
+        name: form.name.value.trim(),
+        company: form.company.value.trim(),
+        phone: form.phone.value.trim(),
+        email: form.email.value.trim(),
+        notes: form.notes.value.trim(),
+        products: productNames.join('; '),
+        time: new Date().toISOString()
+      };
+
+      if (!lead.name || !lead.phone) return false;
+
+      var btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+
+      try {
+        var resp = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(lead)
+        });
+        var data = await resp.json();
+
+        if (!data.success) throw new Error(data.error || 'Save failed');
+
+        // Add to local list immediately
+        leads.push(lead);
+        updateCounter();
+
+        // Reset form
+        form.reset();
+        selected.clear();
+        document.querySelectorAll('.product-card.selected').forEach(function(c) {
+          c.classList.remove('selected');
+        });
+
+        showToast('✓ ' + lead.name + ' saved');
+        document.getElementById('fname').focus();
+
+      } catch (err) {
+        showToast('Save failed — check connection', true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Lead';
+      }
+
+      return false;
+    }
+
+    // ── Fetch Leads from Sheet ──
+    async function fetchLeads() {
+      if (!API_URL) return;
+
+      document.getElementById('loadingMsg').style.display = '';
+      document.getElementById('emptyMsg').style.display = 'none';
+
+      try {
+        var resp = await fetch(API_URL);
+        var data = await resp.json();
+
+        if (data.success) {
+          leads = data.leads || [];
+          updateCounter();
+          if (currentView === 'leads') renderLeads();
+          setSyncStatus(true);
+        }
+      } catch (err) {
+        showToast('Could not reach Google Sheet', true);
+        setSyncStatus(false);
+      } finally {
+        document.getElementById('loadingMsg').style.display = 'none';
+      }
+    }
+
+    // ── Counter ──
+    function updateCounter() {
+      document.getElementById('counter').textContent = leads.length + ' lead' + (leads.length !== 1 ? 's' : '');
+      document.getElementById('exportBtn').disabled = leads.length === 0;
+    }
+
+    // ── Views ──
+    function showView(view) {
+      currentView = view;
+      document.querySelectorAll('.view-btn').forEach(function(b, i) {
+        b.classList.toggle('active', (view === 'capture' && i === 0) || (view === 'leads' && i === 1));
+      });
+      document.getElementById('captureView').classList.toggle('active', view === 'capture');
+      document.getElementById('leadsView').classList.toggle('active', view === 'leads');
+      if (view === 'leads') {
+        fetchLeads();
+        renderLeads();
+      }
+    }
+
+    // ── Render Leads Table ──
+    function renderLeads() {
+      var tbody = document.getElementById('leadsBody');
+      var empty = document.getElementById('emptyMsg');
+
+      if (leads.length === 0) {
+        tbody.innerHTML = '';
+        empty.style.display = '';
+        return;
+      }
+      empty.style.display = 'none';
+
+      var sorted = leads.slice().reverse();
+
+      tbody.innerHTML = sorted.map(function(l) {
+        var products = l.products || '';
+        var chips = products ? products.split('; ').map(function(name) {
+          return '<span class="lead-chip">' + esc(name) + '</span>';
+        }).join('') : '—';
+
+        var rowAttr = l.row ? ' data-row="' + l.row + '"' : '';
+        return '<tr' + rowAttr + '>' +
+          '<td>' + esc(l.name) + '</td>' +
+          '<td>' + esc(l.company || '—') + '</td>' +
+          '<td>' + esc(l.phone) + '</td>' +
+          '<td>' + esc(l.email || '—') + '</td>' +
+          '<td><div class="lead-products-cell">' + chips + '</div></td>' +
+          '<td>' + esc(l.notes || '—') + '</td>' +
+          '<td>' + (l.row ? '<button class="btn-delete" title="Remove" onclick="deleteLead(' + l.row + ')">×</button>' : '') + '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function esc(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ── Delete Lead ──
+    async function deleteLead(row) {
+      if (!API_URL || !confirm('Delete this lead?')) return;
+
+      try {
+        var resp = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: 'delete', row: row })
+        });
+        var data = await resp.json();
+        if (data.success) {
+          showToast('Lead deleted');
+          fetchLeads(); // Refresh from sheet
+        }
+      } catch (err) {
+        showToast('Delete failed', true);
+      }
+    }
+
+    // ── Export CSV ──
+    function exportCSV() {
+      if (leads.length === 0) return;
+      var header = ['Name','Company','Phone','Email','Products','Notes','Captured At'];
+      var rows = leads.map(function(l) {
+        return [l.name, l.company, l.phone, l.email, l.products, l.notes, l.time];
+      });
+      var csv = [header].concat(rows).map(function(r) {
+        return r.map(function(c) {
+          return '"' + String(c || '').replace(/"/g, '""') + '"';
+        }).join(',');
+      }).join('\n');
+
+      var blob = new Blob([csv], { type: 'text/csv' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'ikieguy-leads-' + new Date().toISOString().slice(0, 10) + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Exported ' + leads.length + ' leads');
+    }
+
+    // ── Toast ──
+    function showToast(msg, isError) {
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast' + (isError ? ' error' : '');
+      t.classList.add('show');
+      setTimeout(function() { t.classList.remove('show'); }, 2200);
+    }
+
+    init();
+  </script>
+</body>
+</html>
